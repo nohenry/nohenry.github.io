@@ -5,7 +5,48 @@
         <title>Oliver Clarke</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="preload" as="font" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-brands-400.woff2" crossorigin="anonymous">
+        <link rel="preload" as="font" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2" crossorigin="anonymous">
+
+        <link rel="preload" as="font" href="fonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf">
+        <link rel="preload" as="font" href="fonts/Source_Code_Pro/static/SourceCodePro-Bold.ttf">
+        <link rel="preload" as="font" href="fonts/Open_Sans/static/OpenSans-Light.ttf">
+        <link rel="preload" as="font" href="fonts/Open_Sans/static/OpenSans-Regular.ttf">
+        <link rel="preload" as="style" href="styles.css">
+
+        <link href="styles.css" rel="stylesheet">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <script src="scripts/terminal.js"></script>
     </head>
-    <body>
+    <body class="flex flex-col gap-1 bg-gray-900 font-light">
+        <div class="fixed gradient -z-10"></div>
+        <ul class="text-slate-50 absolute right-0 text-lg p-6 text-right underline-offset-2">
+            <li class="pb-2">
+               <a href="mailto:oliverhenryc@gmail.com"><i class="fa-solid fa-globe"></i> <span class="underline">oliverhenryc@gmail.com</span></a>
+            </li>
+            <li class="pb-2">
+               <a href="https://github.com/nohenry" target="_blank"><i class="fa-brands fa-github"></i> <span class="underline">github.com/nohenry</span></a>
+            </li>
+            <li class="pb-2">
+               <a href="https://www.linkedin.com/in/oliver-clarke-65304322b/" target="_blank"><i class="fa-brands fa-linkedin"></i> <span class="underline">linkedin.com</span></a>
+            </li>
+        </ul>        
+
+        <h1 class="text-8xl text-slate-200 pt-6 text-center">
+            <a href="#">Oliver Clarke</a>
+        </h1>
+        <h3 class="text-3xl text-slate-500 text-center pb-6">
+            Application Developer
+        </h3>
+
+        <div class="flex justify-center items-stretch grow p-10 pt-0 gap-10">
+            <div id="terminal" class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow p-4 w-0">
+                <div id="terminal-content" class="text-slate-200 font-source text-3xl h-full bg-transparent break-words" autocomplete="off" spellcheck="false"></div>
+            </div>
+            <!-- <div class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow"></div> -->
+        </div>
     </body>
 </html>

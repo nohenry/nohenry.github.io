@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('fonts/Open_Sans/static/OpenSans-Light.ttf') format('woff2');
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('fonts/Open_Sans/static/OpenSans-Regular.ttf') format('woff2');
+}
+
+@font-face {
+    font-family: 'source-code';
+    font-style: normal;
+    font-weight: 500;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('fonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf') format('woff2');
+}
+
+@font-face {
+    font-family: 'source-code';
+    font-style: normal;
+    font-weight: bold;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('fonts/Source_Code_Pro/static/SourceCodePro-Bold.ttf') format('woff2');
+}
+
+@font-face {
+    font-family: 'source-code';
+    font-style: italic;
+    font-weight: 500;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('../fonts/Source_Code_Pro/static/SourceCodePro-Italic.ttf') format('woff2');
+}
+
+@font-face {
+    font-family: 'source-code';
+    font-style: italic;
+    font-weight: bold;
+    font-stretch: 100%;
+    font-display: swap;
+    src: url('../fonts/Source_Code_Pro/static/SourceCodePro-BoldItalic.ttf') format('woff2');
+}
+
+* {
+    min-width: 0;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+body {
+    background-color: #0c0d13 !important;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+.gradient {
+    --gradient-size: 1000px;
+    width: var(--gradient-size);
+    height: var(--gradient-size);
+
+    top: calc(50vh - var(--gradient-size) / 2);
+    left: calc(50vw - var(--gradient-size) / 2);
+
+    --speed: 40s;
+    --easing: cubic-bezier(0.8, 0.2, 0.2, 0.8);
+
+    filter: blur(calc(var(--gradient-size) / 5));
+    background-image: repeating-radial-gradient(ellipse, #0d1d31 0%, rgb(23, 25, 36) 60%);
+    background-position: center;
+    animation: rotate var(--speed) var(--easing) infinite;
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+}
+
+#terminal-content p {
+    @apply pb-3;
+}

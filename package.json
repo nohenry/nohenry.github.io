@@ -1,0 +1,14 @@
+{
+    "name": "nohenry.github.io",
+    "version": "1.0.0",
+    "main": "index.js",
+    "repository": "https://github.com/nohenry/nohenry.github.io.git",
+    "author": "Oliver <oliverhenryc@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "watch": "npx tailwindcss -i style/input.css -o styles.css --watch"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.4.1"
+    }
+}
