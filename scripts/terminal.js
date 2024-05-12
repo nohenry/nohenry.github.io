@@ -2,9 +2,9 @@
  */
 
 /**
- * @typedef {{ color?: string, bold?: boolean, italic?: boolean, delay?: number, mergeNext?: boolean }} Format
- * @typedef {{ text: string, format?: Format, element: HTMLElement }} DialogText
- * @typedef {{ text: string | DialogText[], format?: Format, element?: HTMLParagraphElement }} Dialog
+ * @typedef {{ color?: string, bold?: boolean, italic?: boolean, underline?: boolean, delay?: number, mergeNext?: boolean }} Format
+ * @typedef {{ text: string, format?: Format, element: HTMLElement, link?: string }} DialogText
+ * @typedef {{ text: string | DialogText[], format?: Format, element?: HTMLParagraphElement, link?: string }} Dialog
  */
 
 const colors = {
@@ -34,10 +34,40 @@ const terminalDiaglog = [
     },
     {
         text: [
-            { text: 'Thank you for visiting my website...', format: { delay: 2000 } },
-            { text: 'The site is still' },
-            { text: 'Under Construction™', format: { bold: true, italic: true, color: 'brightRed', mergeNext: true, delay: 1000 } },
+            { text: 'Hi, I\'m Oliver, a 3rd year ' },
+            { text: 'computer engineering', format: { color: 'yellow' } },
+            { text: ' student at the University of Manitoba.'}
         ]
+    },
+    {
+        text: [
+            { text: 'I have a passion for low level systems development, specifically ' },
+            { text: 'kernels', format: { color: 'cyan', mergeNext: true } },
+            { text: ', ' },
+            { text: 'compilers', format: { color: 'cyan', mergeNext: true  } },
+            { text: ', and ' },
+            { text: 'game engines', format: { color: 'cyan', mergeNext: true  } },
+            { text: '.' },
+        ]
+    },
+    {
+        text: [
+            { text: 'If you\'re interested more into what I work on, please see my ' },
+            { text: 'projects', link: '#projects', format: { color: 'red', underline: true, mergeNext: true } },
+            { text: ' and ' },
+            { text: 'languages', link: '#languages', format: { color: 'red', underline: true, mergeNext: true } },
+            { text: '.' },
+        ]
+    },
+    // {
+    //     text: [
+    //         { text: 'Thank you for visiting my website...', format: { delay: 2000 } },
+    //         { text: 'The site is still' },
+    //         { text: 'Under Construction™', format: { bold: true, italic: true, color: 'brightRed', mergeNext: true, delay: 1000 } },
+    //     ]
+    // },
+    {
+        text: ''
     },
     {
         text: [{ text: 'End' }]
@@ -84,7 +114,7 @@ class Caret {
     }
 }
 
-window.onload = () => {
+window.addEventListener('load', () => {
     const terminalContent = document.querySelector('#terminal-content');
 
     let terminalIndex = 0;
@@ -119,7 +149,14 @@ window.onload = () => {
                 newP.innerText = dialog.text;
             } else {
                 for (const text of dialog.text) {
-                    const newSpan = document.createElement('span');
+                    let newSpan
+                    if (text.link) {
+                        newSpan = document.createElement('a');
+                        newSpan.href = text.link
+                    } else {
+                        newSpan = document.createElement('span');
+                    }
+                    
                     let builder = '';
                     builder = text.text;
 
@@ -138,6 +175,10 @@ window.onload = () => {
 
                     if (text?.format?.italic) {
                         newSpan.style.fontStyle = 'italic';
+                    }
+
+                    if (text?.format?.underline) {
+                        newSpan.style.textDecoration = 'underline'
                     }
 
                     newSpan.innerText = builder;
@@ -164,7 +205,13 @@ window.onload = () => {
         if (typeof dialog.text === 'string') {
             const character = dialog.text[index];
             if (index === 0) {
-                const newElement = document.createElement(tag);
+                let newElement
+                if (dialog.link) {
+                    newElement = document.createElement('a');
+                    newElement.href = dialog.link
+                } else {
+                    newElement = document.createElement(tag);
+                }
                 dialog.element = newElement;
 
                 const format = dialog.format;
@@ -180,6 +227,10 @@ window.onload = () => {
 
                     if (format.italic) {
                         newElement.style.fontStyle = 'italic';
+                    }
+
+                    if (format.underline) {
+                        newElement.style.textDecoration = 'underline';
                     }
                 }
 
@@ -264,7 +315,7 @@ window.onload = () => {
             doneTyping();
         }
     }
-};
+});
 
 function createElementFromHTML(htmlString) {
     var div = document.createElement('div');

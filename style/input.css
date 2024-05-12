@@ -91,6 +91,8 @@ body {
     filter: blur(calc(var(--gradient-size) / 5));
     background-image: repeating-radial-gradient(ellipse, #0d1d31 0%, rgb(23, 25, 36) 60%);
     background-position: center;
+    background-size: 100vw 100vh;
+    background-repeat: repeat;
     animation: rotate var(--speed) var(--easing) infinite;
     border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
 }

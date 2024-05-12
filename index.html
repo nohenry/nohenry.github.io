@@ -1,50 +1,159 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" />
         <title>Oliver Clarke</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <link rel="preload" as="font" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-brands-400.woff2" crossorigin="anonymous">
-        <link rel="preload" as="font" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2" crossorigin="anonymous">
+        <link
+            rel="preload"
+            as="font"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-brands-400.woff2"
+            crossorigin="anonymous"
+        />
+        <link
+            rel="preload"
+            as="font"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.woff2"
+            crossorigin="anonymous"
+        />
 
-        <link rel="preload" as="font" href="fonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf">
-        <link rel="preload" as="font" href="fonts/Source_Code_Pro/static/SourceCodePro-Bold.ttf">
-        <link rel="preload" as="font" href="fonts/Open_Sans/static/OpenSans-Light.ttf">
-        <link rel="preload" as="font" href="fonts/Open_Sans/static/OpenSans-Regular.ttf">
-        <link rel="preload" as="style" href="styles.css">
+        <link
+            rel="preload"
+            as="font"
+            href="fonts/Source_Code_Pro/static/SourceCodePro-Regular.ttf"
+        />
+        <link
+            rel="preload"
+            as="font"
+            href="fonts/Source_Code_Pro/static/SourceCodePro-Bold.ttf"
+        />
+        <link
+            rel="preload"
+            as="font"
+            href="fonts/Open_Sans/static/OpenSans-Light.ttf"
+        />
+        <link
+            rel="preload"
+            as="font"
+            href="fonts/Open_Sans/static/OpenSans-Regular.ttf"
+        />
+        <link rel="preload" as="font" href="https://cdn.jsdelivr.net/npm/devicon@2.16.0/fonts/devicon.ttf?iehcku">
+        <link rel="preload" as="style" href="styles.css" />
 
-        <link href="styles.css" rel="stylesheet">
+        <link href="styles.css" rel="stylesheet" />
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+            integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/devicon@2.16.0/devicon.min.css">
 
+        <script src="scripts/github.js"></script>
         <script src="scripts/terminal.js"></script>
+
+        <script>
+            (async () => {
+                await getUserLanguagePercentages();
+            })()
+        </script>
     </head>
-    <body class="flex flex-col gap-1 bg-gray-900 font-light">
-        <div class="fixed gradient -z-10"></div>
-        <ul class="text-slate-50 absolute right-0 text-lg p-6 text-right underline-offset-2">
-            <li class="pb-2">
-               <a href="mailto:oliverhenryc@gmail.com"><i class="fa-solid fa-globe"></i> <span class="underline">oliverhenryc@gmail.com</span></a>
-            </li>
-            <li class="pb-2">
-               <a href="https://github.com/nohenry" target="_blank"><i class="fa-brands fa-github"></i> <span class="underline">github.com/nohenry</span></a>
-            </li>
-            <li class="pb-2">
-               <a href="https://www.linkedin.com/in/oliver-clarke-65304322b/" target="_blank"><i class="fa-brands fa-linkedin"></i> <span class="underline">linkedin.com</span></a>
-            </li>
-        </ul>        
+    <body
+        class="bg-gray-900 font-light"
+        style="overflow-y: auto; overflow-x: hidden"
+    >
+        <div class="flex flex-col gap-1">
+            <div class="fixed gradient -z-10"></div>
 
-        <h1 class="text-8xl text-slate-200 pt-6 text-center">
-            <a href="#">Oliver Clarke</a>
-        </h1>
-        <h3 class="text-3xl text-slate-500 text-center pb-6">
-            Application Developer
-        </h3>
+            <div class="pb-6">
+                <h1 class="text-8xl text-slate-200 pt-6 text-center">
+                    <a href="#">Oliver Clarke</a>
+                </h1>
+                <h3 class="text-3xl text-slate-500 text-center">
+                    Application Developer
+                </h3>
 
-        <div class="flex justify-center items-stretch grow p-10 pt-0 gap-10">
-            <div id="terminal" class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow p-4 w-0">
-                <div id="terminal-content" class="text-slate-200 font-source text-3xl h-full bg-transparent break-words" autocomplete="off" spellcheck="false"></div>
+                <div
+                    class="flex lg:flex-col justify-center gap-6 lg:gap-2 lg:text-right lg:absolute lg:right-0 lg:top-0 text-slate-50 text-lg p-6 pb-0 underline-offset-2 whitespace-nowrap text-nowrap"
+                >
+                    <div class="pb-2">
+                        <a href="mailto:oliverhenryc@gmail.com"
+                            ><i class="fa-solid fa-globe"></i>
+                            <span class="underline">oliverhenryc@gmail.com</span></a
+                        >
+                    </div>
+                    <div class="pb-2">
+                        <a href="https://github.com/nohenry" target="_blank"
+                            ><i class="fa-brands fa-github"></i>
+                            <span class="underline">github.com/nohenry</span></a
+                        >
+                    </div>
+                    <div class="pb-2">
+                        <a
+                            href="https://www.linkedin.com/in/oliver-clarke-65304322b/"
+                            target="_blank"
+                            ><i class="fa-brands fa-linkedin"></i>
+                            <span class="underline">linkedin.com</span></a
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="flex justify-center items-stretch p-10 pt-0 gap-10"
+                style="min-height: 70vh"
+            >
+                <div
+                    id="terminal"
+                    class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow p-4 w-0"
+                >
+                    <div
+                        id="terminal-content"
+                        class="text-slate-200 font-source text-xl h-full bg-transparent break-words"
+                        autocomplete="off"
+                        spellcheck="false"
+                    ></div>
+                </div>
+                <!-- <div class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow"></div> -->
+            </div>
+        </div>
+
+        <div
+            class="flex flex-wrap md:flex-nowrap justify-center items-stretch text-slate-200 font-source text-xl  p-10 pt-0 gap-10"
+        >
+            <div
+                class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow p-4 w-0 basis-full md:basis-4/6"
+            >
+                <h3 id="projects" class="text-3xl pb-6 font-bold">Projects</h3>
+                <div>
+                    <div class="pb-6">
+                        <h4 class="text-2xl font-bold pb-1"><a href="https://github.com/nohenry/CompilerV3" class="underline" style="color: #13A10E;">CompilerV3</a> <i class="devicon-rust-original"></i> <i class="devicon-llvm-plain"></i> </h4>
+                        <p class="ps-4">The compiler for the language I created called Daikon Systems Language (DSL, not to be confused with domain specific language). The compiler uses a manual recursive descent parser, semantic analyzer, and machine code generation using LLVM.</p>
+                    </div>
+                    <div class="pb-6">
+                        <h4 class="text-2xl font-bold pb-1"><a href="https://github.com/nohenry/zig_kernel" class="underline" style="color: #13A10E;">Zig Kernel</a> <i class="devicon-zig-original"></i> <i class="devicon-aarch64-plain"></i> </h4>
+                        <p class="ps-4">One of my latest iterations of building an operating system kernel. This kernel supports both x86_64 and aarch64 patforms. The aim of this project was to create a general purpose multitasking system, and to experiment with a non-UNIX like kernel interface.</p>
+                    </div>
+                    <div class="pb-6">
+                        <h4 class="text-2xl font-bold pb-1"><a href="https://github.com/nohenry/browser" class="underline" style="color: #13A10E;">SMF Browser</a> <i class="devicon-rust-original"></i> </h4>
+                        <p class="ps-4">A browser engine that uses the Structured Markup Format I created to replace HTML. The point of SMF is to easily layout and style UI in an intuitive way (unlike HTML + CSS). The browser now consists of a renderer, event propogator, and style engine.</p>
+                    </div>
+                    <div class="pb-6">
+                        <h4 class="text-2xl font-bold pb-1"><a href="https://github.com/nohenry/jvm-rs" class="underline" style="color: #13A10E;">jvm-rs</a> <i class="devicon-rust-original"></i> <i class="devicon-java-original"></i></h4>
+                        <p class="ps-4">A Java Virtual Machine implemented in rust. The aim is to be a blazingly fast JVM utilizing LLVM to JIT Java bytecode. Full Java 1.8 bytecode is supported.</p>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="flex flex-col bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow p-4 w-0 basis-full md:basis-2/6"
+            >
+                <h3 id="languages" class="text-3xl pb-1 font-bold">Languages</h3>
+                <div class="text-slate-700 text-base pb-6 ">Percentages represent usage in GitHub repos</div>
+                <div id="language-list" class="grow"></div>
             </div>
             <!-- <div class="bg-zinc-900/50 rounded-2xl border-2 border-zinc-500/50 grow"></div> -->
         </div>
