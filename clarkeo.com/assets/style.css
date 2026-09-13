@@ -1,0 +1,149 @@
+html {
+    font-family: sans-serif
+}
+
+body {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 1rem
+}
+
+nav {
+    display: flex;
+    font-size: 1.2rem
+}
+
+nav a {
+    display: block;
+    margin-right: 3rem;
+    color: #000000;
+    text-decoration: none;
+    border-bottom: solid 2px #1976d2
+}
+
+nav a:visited {
+    color: #000000
+}
+
+nav a.active {
+    border-bottom: none;
+    color: #1976d2
+}
+
+main {
+    margin: 1rem 0
+}
+
+main img {
+    width: 100%
+}
+
+.title {
+    font-size: 1.5rem
+}
+
+.title small {
+    display: block;
+    font-size: 1rem
+}
+
+#body {
+    display: flex
+}
+
+#body:has(> .intro) {
+    display: grid;
+    grid-template-columns: 1fr ;
+    grid-template-areas:
+        "intro contact"
+        "blog contact"
+}
+
+#body .intro {
+    grid-area: intro
+}
+
+#body .blog {
+    grid-area: blog
+}
+
+#body:has(> .intro) .contact {
+    grid-area: contact;
+    /* width: auto */
+}
+
+#body .contact {
+    margin-left: 1rem;
+    /* width: 40% */
+}
+
+#body .contact img {
+    display: block;
+    width: 128px;
+    height: 128px
+}
+
+#body .contact dl dt {
+    color: #d29421
+}
+
+#body .contact dl dd {
+    margin: 0 0 0.5rem 0
+}
+
+@media only screen and (max-width: 768px) {
+    #body {
+        flex-direction: column
+    }
+
+    #body:has(> .intro) {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "intro"
+            "contact"
+            "blog"
+    }
+
+    #body .contact {
+        margin-left: 0;
+        width: 100%
+    }
+}
+
+.article-list .article {
+    margin-bottom: 1rem
+}
+
+.article-list .article .date {
+    display: block
+}
+
+pre {
+    overflow: auto;
+    padding: 0.5rem
+}
+
+.footnote-definition:first-of-type {
+    margin-top: 2rem;
+    border-top: black solid 1px
+}
+
+.footnote-definition p {
+    display: inline
+}
+
+/* .break */
+break-title {
+    display: flex;
+    /* grid-template-columns: 1fr 1fr 1fr; */
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+break-title::after, break-title::before {
+    flex-grow: 1;
+    border-width: 1px;
+    border-style: inset;
+    color: gray;
+    content: "";
+    display: block;
+}

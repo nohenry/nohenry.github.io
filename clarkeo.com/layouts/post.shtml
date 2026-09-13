@@ -1,0 +1,52 @@
+<extend template="base.shtml">
+<head id="head">
+	<style>
+		#prev-next {
+			/* display: flex; */
+			flex-direction: row;
+			justify-content: space-between;
+			margin-top: 40px;
+		}
+		
+		figure {
+			align-self: center;
+			text-align: center;
+			font-style: italic;
+		}
+		
+		.post {
+			display:flex;
+			flex-direction: column;
+		}
+	</style>
+</head>
+<body id="body">
+    <div>
+        <h1 :text="$page.title"></h1>
+        <div class="post" :html="$page.content()"></div>
+
+        <footer>
+            <hr>
+            <h5>SITE UNDER CONSTRUCTION</h5>
+            <img src="$site.asset('under-construction.gif').link()" width=90>
+        </footer>
+
+        <div id="prev-next">
+            <hr>
+            <div :if="$page.prevPage?()">
+                <a href="$if.link()">
+                    ←
+                    <span :text="$if.title"></span>
+                </a>
+            </div>
+
+            <div :if="$page.nextPage?()">
+                <a href="$if.link()">
+                    <span :text="$if.title"></span>
+                    →
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>
