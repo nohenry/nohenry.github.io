@@ -23,6 +23,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./clarkeo.com
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,11 +33,9 @@ jobs:
 
       - name: Setup Zine
         uses: kristoff-it/setup-zine@v2
-        working-directory: ./clarkeo.com
 
       - name: Build
         run: zine release
-        working-directory: ./clarkeo.com
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
