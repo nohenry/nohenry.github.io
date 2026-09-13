@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup Zine
         uses: kristoff-it/setup-zine@v2
+        with:
+          path: './clarkeo.com'
 
       - name: Build
         run: zine release
