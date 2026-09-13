@@ -6,6 +6,11 @@
 		<title :text="$site.title"></title>
 		<link type="text/css" rel="stylesheet" href="$site.asset('style.css').link()">
 		<link type="text/css" rel="stylesheet" href="$site.asset('highlight.css').link()">
+        <script async src="https://plausible.io/js/pa-huKF1gAQiLwd4uYNUlBtB.js"></script>
+        <script>
+            window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+            plausible.init()
+        </script>
 		<super>
 	</head>
 
