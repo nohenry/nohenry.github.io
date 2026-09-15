@@ -1,4 +1,7 @@
 .zine_version = "0.14.0",
+.supermd = .{
+    .headings_h2 = true,
+},
 .site = .simple(.{
     .title = "Oliver Clarke",
     .host_url = "https://clarkeo.com",

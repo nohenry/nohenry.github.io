@@ -1,0 +1,7 @@
+---
+.title = "api.h",
+.date = .date("2026-00-14T00:00:00"),
+.layout = "file.shtml",
+---
+
+[]($code.asset('api.h').language('c'))

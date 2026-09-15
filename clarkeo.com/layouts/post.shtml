@@ -5,7 +5,7 @@
 			/* display: flex; */
 			flex-direction: row;
 			justify-content: space-between;
-			margin-top: 40px;
+			margin-top: 10px;
 		}
 		
 		figure {
@@ -13,23 +13,31 @@
 			text-align: center;
 			font-style: italic;
 		}
+
+        figure img {
+            width: 100%;
+        }
 		
 		.post {
 			display:flex;
 			flex-direction: column;
 		}
+
+        details p {
+            margin-left: 2rem;
+        }
 	</style>
 </head>
 <body id="body">
-    <div>
+    <div style="margin-bottom: 2rem;">
         <h1 :text="$page.title"></h1>
         <div class="post" :html="$page.content()"></div>
 
-        <footer>
+        <!-- <footer>
             <hr>
             <h5>SITE UNDER CONSTRUCTION</h5>
             <img src="$site.asset('under-construction.gif').link()" width=90>
-        </footer>
+        </footer> -->
 
         <div id="prev-next">
             <hr>

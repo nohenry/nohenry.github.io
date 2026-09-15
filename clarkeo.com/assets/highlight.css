@@ -1,12 +1,13 @@
 :root {
   --light-yellow: #e5c07b;
   --dark-yellow: #d19a66;
-  --blue: #61afef;
-  --cyan: #56b6c2;
+  --blue: #178def;
+  --cyan: #298894;
   --light-red: #e06c75;
-  --dark-red: #be5046;
+  --dark-red: #450c07;
   --comment-gray: #5c6370;
-  --magenta: #c678dd;
+  --magenta: #891aab;
+  --dark: #747275;
 }
 
 pre {
@@ -15,23 +16,36 @@ pre {
   padding: 10px 5px;
 }
 
-code.ziggy {
-  color: var(--cyan);
+pre:has(code) {
+    background-color: #FAFAF1;
 }
 
-code.ziggy .keyword,
-code.ziggy .type {
-  color: var(--light-yellow);
+code.c {
+  color: var(--dark);
 }
 
-code.ziggy .string {
-  color: var(--dark-yellow);
-}
-
-code.ziggy .numeric.constant {
+code.c .keyword,
+code.c .type {
   color: var(--magenta);
 }
 
-code.ziggy .function {
+code.c .string {
+  color: var(--dark-yellow);
+}
+
+code.c .number {
+  color: var(--light-red);
+}
+
+code.c .constant {
+  color: var(--light-red);
+}
+
+code.c .property,
+code.c .constant.variable {
+    color: var(--dark-red);
+}
+
+code.c .constant.variable.function {
   color: var(--blue);
 }
