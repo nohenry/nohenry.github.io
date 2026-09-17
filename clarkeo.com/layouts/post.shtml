@@ -15,7 +15,7 @@
 		}
 
         figure img {
-            width: 100%;
+            max-width: 100%;
         }
 		
 		.post {
@@ -31,6 +31,7 @@
 <body id="body">
     <div style="margin-bottom: 2rem;">
         <h1 :text="$page.title"></h1>
+        <p :text="$page.date.format('January 02, 2006')"></p>
         <div class="post" :html="$page.content()"></div>
 
         <!-- <footer>
