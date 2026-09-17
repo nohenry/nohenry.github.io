@@ -8,9 +8,9 @@
 ## Goal
 I got a triangle rendered!
 
-The first step was getting shader compilation working. Mesa has a shader intermediate language called NIR. libagx does most of the hard work in compiling this AGX machine code.
+The first step was getting shader compilation working. Mesa has a shader intermediate language called NIR. libagx does most of the hard work in compiling NIR into AGX machine code.
 
-My job is lowering IO operations, intrinsics, and linking shaders. IO operations are for example accessing uniform and storage buffer data, accessing varying data, descriptor sets, etc. There's a wide range of intrinsic operations, some of them are related to IO operations, but some of them are for example accessing the current vertex index (gl_VertexIndex). I'll cover linking later.
+My job is lowering IO operations and intrinsics, and linking shaders. IO operations are for example accessing uniform and storage buffer data, accessing varying data, descriptor sets, etc. There's a wide range of intrinsic operations, some of them are related to IO operations, but some of them are for example accessing the current vertex index (gl_VertexIndex). I'll cover linking later.
 
 In AGX, uniforms are the way to pass data to the shader program. In the Honeykrisp (Vulkan) driver, uniforms are used to pass the root descriptor set, blending data, VBOs, vertex attribute data, vertex base parameters and more. It's important to note that the hardware doesn't care what we put in the uniform data, but rather it's up to the driver to determine how the data is used. libagx defines an ABI it uses for the data placement, but we'll most likely be using our own ABI for nogfxapi (since for example nogfxapi doesn't have the concept of VBOs).
 
@@ -39,7 +39,7 @@ void main() {
 The vertex shader uses a simple trick to generate vertices for a triangle without using vertex buffers.
 
 ## Linking
-Linking is required since some data needs to be baked into the shader program at draw time (so-called dynamic state). We don't want to compile the entire shader for each draw call, so we link in prologs and epilogs, small pieces of code inserted before and after the actual shader program. The vertex shader for example uses a prolog to load vertex attributes and buffers (I believe this is so the uniform location can change without having to modify the actual shader). We also need to link up varying slots from the vertex shader to the fragment shader (but I'm not quite sure how that works yet. we'll see in a later post).
+Linking is required since some data needs to be baked into the shader program at draw time (so-called dynamic state). We don't want to compile the entire shader for each draw call, so we link in prologs and epilogs, small pieces of code inserted before and after the actual shader program. The vertex shader for example uses a prolog to load vertex attributes and buffers (I believe this is so the uniform location can change without having to modify the actual shader). We also need to link up varying slots from the vertex shader to the fragment shader (but I'm not quite sure how that works yet, we'll see in a later post).
 
 I compile and link shaders each draw call, but later we'll need a way to cache this. Since I'm only doing one draw call right now, it doesn't matter.
 
@@ -64,7 +64,7 @@ agx_ppp_push(&ppp, VIEWPORT, cfg) {
 }
 ```
 
-This lets us conditionally emit state, meaning we can track dirty state then only emit the state that's changed as an optimization. For now I simply push all the required state and don't track dirty state at all.
+This lets us conditionally emit state, meaning we can track dirty state and only emit the state that's changed, as an optimization. For now I simply push all the required state and don't track dirty state at all.
 
 After emitting all the graphics state, I call `agx_vdm_draw` which inserts commands into the control stream to actually start drawing. This is given the vertex count/index count, instance count, base vertex data, etc.
 
@@ -73,23 +73,23 @@ After trying to submit the control stream with all the graphics state and draw c
 
 As you can see, it faulted in the UL1C (Uniform Level 1 Cache) unit, with an unmapped address 0x1100000000. At first, I thought it was an issue with the vertex shader reading gl_VertexIndex, as the compiled shader machine code was using a register r5 marked as cached (wasn't quite sure what that meant), but then I realized the fault message was referencing the fragment shader.
 
-I noticed that the unmapped address was actually the shader base address, i.e. the base address of the USC unit I believe. The USC uses address relative to its base address, so I suspected this was essentially a null pointer access.
+I noticed that the unmapped address was actually the shader base address, i.e. the base address of the USC unit, I believe. The USC uses addresses relative to its base address, so I suspected this was essentially a null pointer access.
 
-I combed through the graphics state trying to find any fields that looked like addresses I was setting to zero, but couldn't find anything. Then, I looked at the DRM submission IOCTL. There were a lot of pointer looking fields that I was setting to 0. I started assigning values to each of the fields with easy to spot consecutive numbers. E.g. field 1 got value 1, field 2 got value 2. The goal was to spot if the umapped address in the fault would change.
+I combed through the graphics state trying to find any fields that looked like addresses I was setting to zero, but couldn't find anything. Then, I looked at the DRM submission IOCTL. There were a lot of pointer looking fields that I was setting to 0. I started assigning values to each of the fields with easy to spot consecutive numbers. E.g. field 1 got value 1, field 2 got value 2. The goal was to spot if the unmapped address in the fault would change.
 
-Low and behold, it did! The address was offset by one of the values, it showed something like 0x1100000200. And this turned out to be the bg_main pointer.
+Lo and behold, it did! The address was offset by one of the values, it showed something like 0x1100000200. And this turned out to be the bg_main pointer.
 
-With this, I finally decided to implement the bg and eot programs. After doing this, copying from Honeykrisp and stripping down (the code), a block triangle appeared on the screen!
+With this, I finally decided to implement the bg and eot programs. After doing this, copying from Honeykrisp and stripping down (the code), a blocky triangle appeared on the screen!
 
 [Blocky Triangle]($image.asset('blocky_triangle.jpeg').size(400,0))
 
-Of course this isn't quite right. The blockiness, along with knowing that the clear color was set to red, made it clear that we're seeing the actual tiles being cleared rather than the rendered triangle (the frag shader sets the triangle color to white). I realized I was setting the color mask write state was being set to 0. After setting that to 0xF, the correct triangle appeared!
+Of course this isn't quite right. The blockiness, along with knowing that the clear color was set to red, made it clear that we're seeing the actual tiles being cleared rather than the rendered triangle (the frag shader sets the triangle color to white). I realized the color mask write state was being set to 0. After setting that to 0xF, the correct triangle appeared!
 
 [Correct Triangle]($image.asset('correct_triangle.jpeg').size(400,0))
 
 _Note: in this image the vertex shader applied a 2x scale to the Y-axis_
 
-You can really see how the tiled rendering works here. First the bg_main program is run on all the affected tiles to clear the tile buffer. Then the actual triangle is emitted on top (actually I'm not sure if the bg_main program is run for completely covered tiles. I would hope not?). The eot_main program is then used to copy the tilebuffer to the render target.
+You can really see how the tiled rendering works here. First the bg_main program is run on all the affected tiles to clear the tile buffer. Then the actual triangle is emitted on top (actually I'm not sure if the bg_main program is run for completely covered tiles. I would hope not?). The eot_main program is then used to copy the tile buffer to the render target.
 
 ## Finishing up
 I disabled the color attachment clear compute shader from last time for most of this post. I needed to do some work to support having both compute control streams and graphics control streams in a single command buffer, and to submit them at the same time. This included setting up proper barriers to ensure the graphics pipeline waited for the compute pipeline to complete before rendering. Not sure if this is optimal, but it works for now.
