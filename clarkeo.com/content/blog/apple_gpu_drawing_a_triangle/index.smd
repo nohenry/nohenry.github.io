@@ -6,20 +6,22 @@
 
 []($section.id('goal'))
 ## Goal
-I got a triangle rendered!
+The goal of this post is to finally get a triangle rendered in our Apple GPU driver! If you haven't read the previous post in this series, you probably should because it contains quite a bit of background info. Read it [here]($link.page('blog/apple_gpu_intro_and_first_steps')).
 
-The first step was getting shader compilation working. Mesa has a shader intermediate language called NIR. libagx does most of the hard work in compiling NIR into AGX machine code.
+## Shader Compilation
 
-My job is lowering IO operations and intrinsics, and linking shaders. IO operations are for example accessing uniform and storage buffer data, accessing varying data, descriptor sets, etc. There's a wide range of intrinsic operations, some of them are related to IO operations, but some of them are for example accessing the current vertex index (gl_VertexIndex). I'll cover linking later.
+The first step was getting shader compilation working. Mesa has a shader intermediate language called NIR. libagx does most of the heavy lifiting by compiling NIR into AGX machine code.
 
-In AGX, uniforms are the way to pass data to the shader program. In the Honeykrisp (Vulkan) driver, uniforms are used to pass the root descriptor set, blending data, VBOs, vertex attribute data, vertex base parameters and more. It's important to note that the hardware doesn't care what we put in the uniform data, but rather it's up to the driver to determine how the data is used. libagx defines an ABI it uses for the data placement, but we'll most likely be using our own ABI for nogfxapi (since for example nogfxapi doesn't have the concept of VBOs).
+My job is lowering IO operations and intrinsics, and linking shaders. IO operations consist of accessing uniform and storage buffer data, accessing varying data, descriptor sets, etc. There's a wide range of intrinsic operations, some of them are related to IO operations, but there are many others. An important intrinsic used by the shaders used later in this provides access to system values, such as the current vertex index (gl_VertexIndex).
 
-The NIR api exposes ways to run passes over the given shader program. We can use these passes to pretty much do anything, introspect the shader, rewrite code, optimize code. Mesa provides a bunch of common passes that we might want to run, but we'll also define our own passes.
+In AGX, uniforms are the fundamental way to pass data to the shader program. Uniform slots are supplied with a GPU pointer on the CPU side, then the shader program can access that data and do whatever it wants with it. In the Honeykrisp (Vulkan) driver, uniforms are used to pass the root descriptor table, blending data, VBOs, vertex attribute data, vertex base parameters and more. It's important to note that the hardware doesn't care what the uniform data represents, it's the driver determines how the data is used. libagx defines the ABI it uses for uniform data placement, but we'll most likely be using our own ABI for nogfxapi (since, for example, nogfxapi doesn't have the concept of VBOs).
+
+The NIR api let's us run passes over a given shader program. We can use these passes to pretty much do anything: introspect the shader, rewrite code, optimize code, etc. Mesa provides a bunch of common passes that we might want to run, but we'll also define our own passes.
 
 I copied most of the NIR compilation and linking code from the Honeykrisp driver, then stripped a lot of it down to what I needed. In the theme of doing the simplest thing possible, I handle almost no IO operations. I'm not passing any uniform data, nor handling varyings.
 
 ## Shaders
-The test shaders I'm using are very simple. They are written in GLSL for now, as it'll be fine for testing this simple functionality. In a future post I'll switch to using a custom shading language compiler.
+The test shaders I'm using are very simple. They're written in GLSL for now, as it'll be fine for testing this simple functionality. In a future post I'll switch to using a custom shading language compiler better suited for nogfxapi.
 
 The vertex shader is this:
 ```glsl
@@ -64,36 +66,52 @@ agx_ppp_push(&ppp, VIEWPORT, cfg) {
 }
 ```
 
-This lets us conditionally emit state, meaning we can track dirty state and only emit the state that's changed, as an optimization. For now I simply push all the required state and don't track dirty state at all.
+This lets us conditionally emit state, meaning we can track dirty state and only emit the state that's changed. For now I simply push all the required state and don't track dirty state at all.
 
 After emitting all the graphics state, I call `agx_vdm_draw` which inserts commands into the control stream to actually start drawing. This is given the vertex count/index count, instance count, base vertex data, etc.
 
 ## Fixing crashes
 After trying to submit the control stream with all the graphics state and draw commands to the queue, the GPU faulted:
 
+[GPU Fault]($image.asset('Fault-gfx.png').size(400,0))
+
 As you can see, it faulted in the UL1C (Uniform Level 1 Cache) unit, with an unmapped address 0x1100000000. At first, I thought it was an issue with the vertex shader reading gl_VertexIndex, as the compiled shader machine code was using a register r5 marked as cached (wasn't quite sure what that meant), but then I realized the fault message was referencing the fragment shader.
 
-I noticed that the unmapped address was actually the shader base address, i.e. the base address of the USC unit, I believe. The USC uses addresses relative to its base address, so I suspected this was essentially a null pointer access.
+I noticed that the unmapped address was actually the shader base address, i.e. the base address of the Unified Shader Core (USC) unit (the USC is the thing that actually runs the shaders). The USC uses addresses relative to its base address, so I suspected this was essentially a null pointer access.
 
 I combed through the graphics state trying to find any fields that looked like addresses I was setting to zero, but couldn't find anything. Then, I looked at the DRM submission IOCTL. There were a lot of pointer looking fields that I was setting to 0. I started assigning values to each of the fields with easy to spot consecutive numbers. E.g. field 1 got value 1, field 2 got value 2. The goal was to spot if the unmapped address in the fault would change.
 
-Lo and behold, it did! The address was offset by one of the values, it showed something like 0x1100000200. And this turned out to be the bg_main pointer.
+[GPU Fault Progress]($image.asset('Fault-gfx-progress.png').size(400,0))
+Lo and behold, it did! The address was offset by one of the values, it showed something like 0x1100000300. And this turned out to be the field `bg.usc`... I'll explain further
 
-With this, I finally decided to implement the bg and eot programs. After doing this, copying from Honeykrisp and stripping down (the code), a blocky triangle appeared on the screen!
+## Tiled Rendering
+This is a very important property of the AGX architecture that I was pretty much completely ignoring up to this point.
+
+Tiled rendering is where the rendering area is divided up into fixed size tiles (say 32x32 pixels), then each tile is processed individually with its own fast cache. It's popular in mobile GPUs as it reduces memory bandwidth which should lead to lower power consumption.
+
+Anyways, even though my Mac Mini is not a mobile device, the AGX architecture originated on Apple's mobile devices, so my M1 GPU is tile based as well.
+
+There's an intermediate pixel buffer called the "tilebuffer". This tilebuffer is allocated by the kernel driver, and is probably not a linear buffer in memory (but I'm not sure about that). The fragment program will write into the tilebuffer, then later the tilebuffer contents will be writen out to the actual render target.
+
+The tilebuffer needs to cleared acoording to the color attachment load operation before the fragment shader can write to it. This is what the `bg.usc` field that was faulting earlier is for (`bg` for background). It contains an address to a shader program that implements that load operation logic. The GPU was trying to run this `bg` shader but ended up trying to execute an unmapped page (null pointer), so it crashed.
+
+There's also an `eot` shader (End of Tile I believe). It runs after the fragment shader has completed and is responsible for transferring the tilebuffer contents to the render target.
+
+I used `libagx` to initialize the tilebuffer properly, and to create the `bg` and `eot` programs. After doing this, a blocky triangle appeared on the screen!
 
 [Blocky Triangle]($image.asset('blocky_triangle.jpeg').size(400,0))
 
-Of course this isn't quite right. The blockiness, along with knowing that the clear color was set to red, made it clear that we're seeing the actual tiles being cleared rather than the rendered triangle (the frag shader sets the triangle color to white). I realized the color mask write state was being set to 0. After setting that to 0xF, the correct triangle appeared!
+Of course, this isn't quite right. The blockiness, along with knowing that the clear color was set to red, made it clear that we were seeing only the tiles being cleared but not the rendered triangle (the frag shader sets the triangle color to white). I realized the color mask was being set to 0 in the graphics state. After setting that to 0xF, the correct triangle appeared!
 
 [Correct Triangle]($image.asset('correct_triangle.jpeg').size(400,0))
 
 _Note: in this image the vertex shader applied a 2x scale to the Y-axis_
 
-You can really see how the tiled rendering works here. First the bg_main program is run on all the affected tiles to clear the tile buffer. Then the actual triangle is emitted on top (actually I'm not sure if the bg_main program is run for completely covered tiles. I would hope not?). The eot_main program is then used to copy the tile buffer to the render target.
+You can really see how the tiled rendering works here. First the `bg` program is run on all the affected tiles to clear the tile buffer. Then the actual triangle is written on top (actually I'm not sure if the bg_main program is run for completely covered tiles. I would hope not?).
 
 ## Finishing up
-I disabled the color attachment clear compute shader from last time for most of this post. I needed to do some work to support having both compute control streams and graphics control streams in a single command buffer, and to submit them at the same time. This included setting up proper barriers to ensure the graphics pipeline waited for the compute pipeline to complete before rendering. Not sure if this is optimal, but it works for now.
+Before starting the work for this post, I disabled the compute pipeline for clearing the color attachment from last time. I needed to do some work to support having both compute control streams and graphics control streams in a single command buffer, and to submit them at the same time. This included setting up proper barriers to ensure correct ordering of control streams. After getting that working, I dispatched the compute pipeline to clear the attachment before rendering, then added a barrier to ensure the graphics pipeline waited for the clear pass to complete. Not sure if this is optimal, but it works for now.
 
 
 
-[Rendered Triangle]($image.asset('rendered_triangle.jpeg').size(400,0))
+[Final Triangle]($image.asset('rendered_triangle.jpeg'))
