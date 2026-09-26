@@ -8,6 +8,24 @@
 ## Goal
 The goal of this post is to finally get a triangle rendered in our Apple GPU driver! If you haven't read the previous post in this series, you probably should because it contains quite a bit of background info. Read it [here]($link.page('blog/apple_gpu_intro_and_first_steps')).
 
+This is the render pass I'll be using for this post:
+```c
+GpuCommandBuffer cmd = gpuStartCommandRecording(state.nogfx.queue);
+
+gpuBeginRenderPass(cmd, (GpuRenderPassDesc) {
+    .colorTargets = {
+        { .texture = state.nogfx.render_target, .loadOp = CLEAR, .storeOp = STORE, .clearColor = { 0, 1, 0, 0 } },
+    },
+});
+
+gpuSetPipeline(cmd, state.pipeline);
+gpuDraw(cmd, NULL, NULL, 3, 1);
+
+gpuEndRenderPass(cmd);
+
+gpuSubmitSimple(state.nogfx.queue, &cmd, 1);
+```
+
 ## Shader Compilation
 
 The first step was getting shader compilation working. Mesa has a shader intermediate language called NIR. libagx does most of the heavy lifiting by compiling NIR into AGX machine code.
@@ -111,7 +129,5 @@ You can really see how the tiled rendering works here. First the `bg` program is
 
 ## Finishing up
 Before starting the work for this post, I disabled the compute pipeline for clearing the color attachment from last time. I needed to do some work to support having both compute control streams and graphics control streams in a single command buffer, and to submit them at the same time. This included setting up proper barriers to ensure correct ordering of control streams. After getting that working, I dispatched the compute pipeline to clear the attachment before rendering, then added a barrier to ensure the graphics pipeline waited for the clear pass to complete. Not sure if this is optimal, but it works for now.
-
-
 
 [Final Triangle]($image.asset('rendered_triangle.jpeg'))

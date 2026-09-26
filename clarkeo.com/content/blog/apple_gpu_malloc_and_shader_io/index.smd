@@ -1,0 +1,190 @@
+---
+.title = "Apple GPU Driver: Shader Compiler and Shader IO",
+.date = .date("2026-09-12:00:00"),
+.layout = "post.shtml",
+---
+
+[]($section.id('goal'))
+## Goal
+In this post I'll be implementing API level allocations with `gpuMalloc`, building a custom shading language compiler, and handling shader IO. By shader IO I mean passing data into our shaders, as well as getting varyings working between the vertex and fragment shader.
+
+## Memory Allocation
+The nogfxapi API has a `gpuMalloc` function that lets us allocate GPU memory. Take a look at its signature:
+
+```c
+typedef enum MEMORY {
+    MEMORY_DEFAULT,   // CPU accessable memory
+    MEMORY_GPU,       // GPU accessable memory only (optimal)
+    MEMORY_READBACK,  // CPU accessable; cache coherent
+} MEMORY;
+
+void* gpuMalloc(GpuDevice device, size_t size, size_t align, MEMORY memory);
+```
+
+Pretty easy to understand. The one thing slightly unusual is that this can return either a CPU mapped pointer (for `MEMORY_DEFAULT` and `MEMORY_READBACK`) or a GPU pointer (for `MEMORY_GPU`). We return a CPU pointer because the point of using `MEMORY_DEFAULT` is to transfer data from the host to the GPU, so it's convenient to just returned the mapped CPU pointer.
+
+Some functions have parameters that are GPU pointers (see [gpuDraw]($link.page('files/api.h'))). We need to be able to map CPU pointers back to their corresponding GPU pointers. We do that with `gpuHostToDevicePointer`. This takes in a CPU pointer (host pointer) and returns the corresponding GPU pointer (device pointer). It uses a binary tree, allowing us to translate any pointer within an allocated memory range, rather than than being limited to mapping only the base address, as would be the case with a table.
+
+When I started implementing `gpuMalloc`, I thought I would need to implement custom mapping logic rather than using the existing `agx_bo_map`. It turns out I probably didn't need to do this, but I already implemented it and it's still being used. It will need to be improved in the future anyways.
+
+When creating the device I reserve `0x100000000` bytes of memory (reserved, not actually committed). The idea is to have a very simple bump allocator: I keep track of the head and base pointers of the allocation. I have a `nogfx_bo_mmap` function that makes a `DRM_IOCTL_ASAHI_GEM_MMAP_OFFSET` ioctl to get an drm fd specific offset. Finally I call mmap with the drm fd, gem offset, and the bump allocator head. Then the head is bumped by the allocation size. The mapping is then inserting into the binary tree for future lookup.
+
+## Shading language compiler
+So far I've been using GLSL to write the shaders for this project. GLSL however, was designed with GPUs from the '00s in mind, so using it with an API like nogfxapi, designed for modern GPUs, gets quite messy and inconvenient.
+
+A more modern alternative would be Slang. I looked into it a bit, and it seems like it would still need quite a bit of modification to make using nogfxapi convenient. I also dislike the extremely slow compile times.
+
+I decided to use a custom shader compiler I've been working on separately for some time. The compiler was originally meant for CPU use, which is why it has a custom x86_64 backend. But about half a year ago, I created a branch adapting it for use as a shading language, and added a SPIR-V backend. And now, I've adapted that to work as a `nogfxapi` shader compiler. You can find a branch with the `nogfxapi` work [here](https://github.com/nohenry/ll_compiler/tree/shader-nogfx)
+
+Note: I wont be going into too much detail about the compiler in this series. This specific compiler isn't too important, it's just an example of what a convenient shading language for nogfxapi might look like. The compiler itself is a bit messy, and needs a lot of work before even thinking about using it seriously.
+
+## Passing data to shaders
+Shaders are passed a single pointer to whatever they want. This is the example I'll get running:
+
+Vertex shader:
+```c
+struct Vertex {
+    float2 position;
+}
+
+void main(Vertex* vertices) {
+    #position = float4(vertices[#vertex_index].position, 0, 1);
+}
+```
+
+- `vertices` is the shader input parameter
+- `#position` is a builtin variable for assigning to the position varying (equivelent to gl_Position)
+- `#vertex_index` is equivelent to gl_VertexIndex
+
+This shader simply emits the vertex position stored in the `vertices` array at the current vertex index.
+
+Fragment shader:
+```c
+void main() {
+    #color = float4(1, 1, 1, 1);
+}
+```
+
+We can then setup a render pass like this:
+
+```c
+struct Vertex {
+    float x, y;
+};
+
+struct Vertex* vertices = gpuMalloc(state.nogfx.device, sizeof(struct Vertex) * 3, 8, MEMORY_READBACK);
+struct Vertex* vertices_gpu = gpuHostToDevicePointer(state.nogfx.device, vertices);
+vertices[0].x = 0.0;
+vertices[0].y = 0.0;
+vertices[1].x = 1.0;
+vertices[1].y = 0.0;
+vertices[2].x = 0.0;
+vertices[2].y = 1.0;
+
+GpuCommandBuffer cmd = gpuStartCommandRecording(state.nogfx.queue);
+
+gpuBeginRenderPass(cmd, (GpuRenderPassDesc) {
+    .colorTargets = {
+        { .texture = state.nogfx.render_target, .loadOp = CLEAR, .storeOp = STORE, .clearColor = { 0, 1, 0, 0 } },
+    },
+});
+
+gpuSetPipeline(cmd, state.pipeline);
+gpuDraw(cmd, (void*)vertices_gpu, NULL, 3, 1);
+
+gpuEndRenderPass(cmd);
+
+gpuSubmitSimple(state.nogfx.queue, &cmd, 1);
+```
+
+We are allocating 3 vertices using `gpuMalloc`. We then pass the gpu pointer to `gpuDraw`, which accepts a vertex parameter pointer, as well as a fragment paramter pointer. We're only using the vertex parameter pointer for now.
+
+This wont work just quite yet.
+
+## Root descriptor table
+We need to get our vertex parameter pointer to the GPU somehow. In the last post, I talked about using uniforms to pass data to shaders. We'll use an 8 byte uniform to pass the address of a root descriptor table. A root descriptor table is pretty much just a fancy way to say a struct. In Vulkan, this would contain metadata describing descriptor sets (hence descriptor table), along with quite a bit of other information. But for nogfxapi, I only need to pass the vertex parameter pointer for now.
+
+The nogfxapi root descriptor table is represented like this:
+```c
+struct asahi_nogfx_root_descriptor_table {
+    uint64_t root_descriptor_address;
+    uint64_t vertex_data_address;
+};
+```
+
+The `root_descriptor_address` field is a neat trick taken from the Honeykrisp driver. It lets us use the root descriptor pointer directly as the uniform buffer address instead of having to allocate a separate 8 byte buffer containing the pointer of the actuall root descriptor table. Cool! This reminds me of the recursive page table mapping technique used in kernels.
+
+We then need to add shader passes to properly use our root descriptor table. My compiler implements the shader parameter as a push constant pointer. When we access a push constant, the NIR intrinsic `nir_intrinsic_load_push_constant` will be emitted. I added a lowering pass that rewrites this into the NIR intrinsic `nir_intrinsic_load_root_agx` with the offset of the `vertex_data_address` field in the root descriptor table. `nir_intrinsic_load_root_agx` references the root descriptor table from a specific uniform slot (the specific uniform slot is assigned in a different pass). 
+
+That's a bunch of detailed information, I'm not sure if I explained it well, but the specifics aren't too important anyways.
+
+Once everything was wired up (and after I fixed some crashes), we get the same triangle as last time!
+
+[Cool triangle]($image.asset('same_triangle.jpeg'))
+
+Of course, the triangle uses vertices from a buffer rather than generating them from the vertex index, which is pretty neat.
+
+Note: The important thing here is that there is no need for special VBOs, and no need to setup vertex attribute layouts (yay!). We simply index the pointer as an array like we might do on the CPU side. This has the benefit of reducing bugs related to VAO mismatch: we can define the Vertex struct in a shared header file that both the CPU side and GPU side use to access the vertex buffer.
+
+## Varyings
+Varyings are the way data is passed from the vertex shader to the fragment shader. In Vulkan and modern OpenGL, this would be in/out variables.
+
+Varyings are handled in AGX by the Unified Vertex Store (UVS) unit. We need to determine the layout of the varyings (i.e. which varying slots are used, size of the varyings, how they are interpolated). `libagx` provides an NIR pass to collect and store all this information from the shader.
+
+The fragment shader needs to be able to load the varyings. In AGX, the fragment shader references varyings through "coefficient registers" (CF registers). The CF registers contain the  varying data emitted from the vertex shader. A single CF register roughly holds a single component, meaning if I have a varying of type `vec4`, it will use 4 CF register to store each component. Each register is configured with some metadata, such as interpolation mode (perspective, flat, linear), and is also mapped to the corresponding shader varying slots.
+
+We need to be able to determine the CF register index in the fragment shader from the varying index. I added a field to the root descriptor `uint8_t uvs_index[VARYING_SLOT_MAX];`. This lets us map the logical varying slot index (think the `location` in glsl) to the CF base register index. This field is filled out based on the UVS layout information.
+The NIR intrinsic `nir_intrinsic_load_uvs_index_agx` (which is emitted from a previous `libagx` pass) is used to grab the base CF index for a specific varying slot in the fragment shader. I added a pass that lowers this into a load of the root descriptor, indexing into `uvs_index` given the location slot. A `libagx` pass uses this to determine the offset into the CF registers.
+
+### Shaders
+
+I implemented support for varyings in my shading language. You declare your varyings in a so called varying block. These are the example shaders I'll be using:
+
+Vertex:
+```c
+struct Vertex {
+    float2 position;
+}
+
+varying {
+    float2 uv; // Uses perspective interpolation.
+               // Also supports flat and noperspective interpolation with modifier keywords:
+               //    flat int material_id;
+               //    noperspective vec2 uv_no_depth_coord;
+}
+
+void main(Vertex* vertices) {
+    uv = vertices[#vertex_index].position;
+    #position = float4(vertices[#vertex_index].position, 0, 1);
+}
+```
+
+Fragment:
+```c
+varying {
+    // Must match the vertex shader
+    float2 uv;
+}
+
+void main() {
+    #color = float4(uv, 0, 1);
+}
+```
+
+The varying block is quite simplistic for now. Varying locations are determined by the index of the field in the block and multiple varying blocks aren't handled (I haven't tested, so no idea what would happen). But this will work for demonstration.
+
+Let's test this out. The render pass stays the same, but the pipeline was updated to use the new shaders. And...
+
+[Broken Triangle]($image.asset('broken_triangle.jpeg'))
+
+Oof, that doesn't look right. After fixing a bunch of bugs and crashes like usual, we get our interpolated triangle!
+
+[Final Triangle]($image.asset('final_triangle.jpeg'))
+
+Very cool!!! This is very exciting to see working, as most graphics techniques require some form of varying interpolation. A very fundamental technique (if you can even call it that), is texturing! We can use UV interpolation to texture objects. I plan to get textures working next. Stay tuned!
+
+### API Functions Implemented 
+```c
+void* gpuMalloc(GpuDevice device, size_t bytes, size_t align, MEMORY memory);
+void* gpuHostToDevicePointer(GpuDevice device, void *ptr);
+```

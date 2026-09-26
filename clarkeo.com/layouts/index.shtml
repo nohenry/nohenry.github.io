@@ -18,12 +18,12 @@
 		<h1 class="site-title" :text="$site.title"></h1>
 
         <main>
-            <p>I'm Oliver Clarke. I'm a software developer passionate about working close to the hardware, and making things go fast.
-                I've worked on many hobby compilers, kernels, and game engines. Recently I've been deep diving
-                in the Linux graphics stack, and have been contributing to graphics APIs in the Mesa project.
+            <p>I'm Oliver Clarke. I'm a software developer who has an interest in working with hardware, and I like making things go fast.
+                I'm big on the Handmade/Better Software movement.  I've worked on many hobby compilers, kernels, and game engines. Recently I've been deep diving
+                in the Linux graphics stack, and have been working on open source graphics drivers in the Mesa project.
             </p>
             <p>
-                I'm currently in my 4th year of undergrad in Computer Engineering at the University of Manitoba.
+                I'm currently a 4th year undegrad student of Computer Engineering at the University of Manitoba.
             </p>
         </main>
     </div>
@@ -49,11 +49,11 @@
             <dt>GitHub</dt>
             <dd><a href="https://github.com/nohenry">nohenry</a></dd>
 
-            <dt>LinkedIn</dt>
-            <dd><a href="https://www.linkedin.com/in/oliver-clarke-65304322b/">oliver-clarke</a></dd>
+            <!-- <dt>LinkedIn</dt>
+            <dd><a href="https://www.linkedin.com/in/oliver-clarke-65304322b/">oliver-clarke</a></dd> -->
 
-            <dt>Resume</dt>
-            <dd><a href="$site.asset('resume.pdf').link()">resume.pdf</a></dd>
+            <!-- <dt>Resume</dt>
+            <dd><a href="$site.asset('resume.pdf').link()">resume.pdf</a></dd> -->
         </dl>
 
         <dl>

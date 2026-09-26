@@ -2,7 +2,7 @@
 <head id="head">
 	<style>
 		#prev-next {
-			/* display: flex; */
+			display: flex;
 			flex-direction: row;
 			justify-content: space-between;
 			margin-top: 10px;
@@ -26,12 +26,27 @@
         details p {
             margin-left: 2rem;
         }
+
+        #date-home {
+            display: flex;
+			justify-content: space-between;
+            align-items: center;
+        }
+
+        #date-home p {
+            padding: 0;
+            margin: 0;
+        }
 	</style>
 </head>
 <body id="body">
     <div style="margin-bottom: 2rem;">
         <h1 :text="$page.title"></h1>
-        <p :text="$page.date.format('January 02, 2006')"></p>
+        <div id="date-home">
+            <p :text="$page.date.format('January 02, 2006')"></p>
+
+            <a id="home" href="$site.link()">Home</a>
+        </div>
         <div class="post" :html="$page.content()"></div>
 
         <!-- <footer>
@@ -40,8 +55,13 @@
             <img src="$site.asset('under-construction.gif').link()" width=90>
         </footer> -->
 
+        <hr>
         <div id="prev-next">
-            <hr>
+            <div>Earlier</div>
+            <a id="home" href="$site.link()">Home</a>
+            <div>Later</div>
+        </div>
+        <div id="prev-next">
             <div :if="$page.prevPage?()">
                 <a href="$if.link()">
                     ←
