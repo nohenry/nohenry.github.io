@@ -2,9 +2,14 @@
     "cSpell.enabled": true,
     "cSpell.words": [
         "Asahi",
+        "glsl",
         "Honeykrisp",
         "Lavapipe",
+        "libagx",
+        "Malloc",
         "misrender",
-        "misrendering"
+        "misrendering",
+        "nogfxapi",
+        "Varyings"
     ]
 }

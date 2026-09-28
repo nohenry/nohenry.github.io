@@ -15,9 +15,9 @@ The nogfxapi API has a `gpuMalloc` function that lets us allocate GPU memory. Ta
 
 ```c
 typedef enum MEMORY {
-    MEMORY_DEFAULT,   // CPU accessable memory
-    MEMORY_GPU,       // GPU accessable memory only (optimal)
-    MEMORY_READBACK,  // CPU accessable; cache coherent
+    MEMORY_DEFAULT,   // CPU accessible memory
+    MEMORY_GPU,       // GPU accessible memory only (optimal)
+    MEMORY_READBACK,  // CPU accessible; cache coherent
 } MEMORY;
 
 void* gpuMalloc(GpuDevice device, size_t size, size_t align, MEMORY memory);
@@ -55,8 +55,8 @@ void main(Vertex* vertices) {
 ```
 
 - `vertices` is the shader input parameter
-- `#position` is a builtin variable for assigning to the position varying (equivelent to gl_Position)
-- `#vertex_index` is equivelent to gl_VertexIndex
+- `#position` is a builtin variable for assigning to the position varying (equivalent to gl_Position)
+- `#vertex_index` is equivalent to gl_VertexIndex
 
 This shader simply emits the vertex position stored in the `vertices` array at the current vertex index.
 
@@ -99,7 +99,7 @@ gpuEndRenderPass(cmd);
 gpuSubmitSimple(state.nogfx.queue, &cmd, 1);
 ```
 
-We are allocating 3 vertices using `gpuMalloc`. We then pass the gpu pointer to `gpuDraw`, which accepts a vertex parameter pointer, as well as a fragment paramter pointer. We're only using the vertex parameter pointer for now.
+We are allocating 3 vertices using `gpuMalloc`. We then pass the gpu pointer to `gpuDraw`, which accepts a vertex parameter pointer, as well as a fragment parameter pointer. We're only using the vertex parameter pointer for now.
 
 This wont work just quite yet.
 
@@ -114,7 +114,7 @@ struct asahi_nogfx_root_descriptor_table {
 };
 ```
 
-The `root_descriptor_address` field is a neat trick taken from the Honeykrisp driver. It lets us use the root descriptor pointer directly as the uniform buffer address instead of having to allocate a separate 8 byte buffer containing the pointer of the actuall root descriptor table. Cool! This reminds me of the recursive page table mapping technique used in kernels.
+The `root_descriptor_address` field is a neat trick taken from the Honeykrisp driver. It lets us use the root descriptor pointer directly as the uniform buffer address instead of having to allocate a separate 8 byte buffer containing the pointer of the actually root descriptor table. Cool! This reminds me of the recursive page table mapping technique used in kernels.
 
 We then need to add shader passes to properly use our root descriptor table. My compiler implements the shader parameter as a push constant pointer. When we access a push constant, the NIR intrinsic `nir_intrinsic_load_push_constant` will be emitted. I added a lowering pass that rewrites this into the NIR intrinsic `nir_intrinsic_load_root_agx` with the offset of the `vertex_data_address` field in the root descriptor table. `nir_intrinsic_load_root_agx` references the root descriptor table from a specific uniform slot (the specific uniform slot is assigned in a different pass). 
 
