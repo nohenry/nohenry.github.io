@@ -8,6 +8,10 @@ body {
     padding: 0 1rem
 }
 
+h1, h2, h3 {
+    margin-bottom: 0em;
+}
+
 nav {
     display: flex;
     font-size: 1.2rem

@@ -52,8 +52,8 @@
             <!-- <dt>LinkedIn</dt>
             <dd><a href="https://www.linkedin.com/in/oliver-clarke-65304322b/">oliver-clarke</a></dd> -->
 
-            <!-- <dt>Resume</dt>
-            <dd><a href="$site.asset('resume.pdf').link()">resume.pdf</a></dd> -->
+            <dt>Resume</dt>
+            <dd><a href="$site.asset('resume.pdf').link()">resume.pdf</a></dd>
         </dl>
 
         <dl>
