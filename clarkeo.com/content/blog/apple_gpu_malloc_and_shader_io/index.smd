@@ -4,6 +4,8 @@
 .layout = "post.shtml",
 ---
 
+This is part 3 of the Apple GPU Driver series.
+
 []($section.id('goal'))
 ## Goal
 In this post I'll be implementing API level allocations with `gpuMalloc`, building a custom shading language compiler, and handling shader IO. By shader IO I mean passing data into our shaders, as well as getting varyings working between the vertex and fragment shader.

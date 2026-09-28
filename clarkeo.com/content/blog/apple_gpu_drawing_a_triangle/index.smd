@@ -4,6 +4,8 @@
 .layout = "post.shtml",
 ---
 
+This is part 2 of the Apple GPU Driver series.
+
 []($section.id('goal'))
 ## Goal
 The goal of this post is to finally get a triangle rendered in our Apple GPU driver! If you haven't read the previous post in this series, you probably should because it contains quite a bit of background info. Read it [here]($link.page('blog/apple_gpu_intro_and_first_steps')).
